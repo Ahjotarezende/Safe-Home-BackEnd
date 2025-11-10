@@ -3,13 +3,39 @@ const Person = require("../../models/person/person.model");
 
 const router = express.Router();
 
+async function savePerson(personID, data) {
+    const person = await Person.findByIdAndUpdate(
+        personID,
+        data
+    );
+    return person;
+}
+
+async function getPersonByID(personID) {
+    const person = await Person.findById(personID);
+    return person;
+}
+
 router.post("/", async (req, res) => {
     try {
         const person = req.body;
+        const responsibleID = person?.respovelId;
+
+        if (responsibleID) {
+            delete person.respovelId
+        }
+
         const newPerson = await Person.create(person);
+
         if (!newPerson) {
             res.status(500).json({ error: "Erro ao criar nova pessoa" });
         }
+
+        const responsible = getPersonByID(responsibleID);
+        responsible.monitored.push(newPerson);
+
+        await savePerson(responsibleID, responsible);
+
         res.status(200).json({ message: "Pessoa criada com sucesso", data: newPerson });
     } catch (err) {
         res.status(500).json({ error: "Erro ao criar pessoa", message: err });
@@ -20,7 +46,7 @@ router.put("/:personid", async (req, res) => {
     try {
         const person = { ...req.body };
         const personID = req.params.personid;
-        const updatedPerson = await Person.findByIdAndUpdate(
+        const updatedPerson = await savePerson(
             personID,
             person
         );
@@ -46,7 +72,7 @@ router.get("/", async (req, res) => {
 router.get("/getPersonByID/:personid", async (req, res) => {
     try {
         const personID = req.params.personid;
-        const person = await Person.findById(personID);
+        const person = await getPersonByID(personID);
         res.status(200).json(person);
     } catch (err) {
         res.status(500).json({ error: "Erro ao buscar pessoa", message: err });
