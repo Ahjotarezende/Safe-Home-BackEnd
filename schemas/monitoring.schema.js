@@ -5,7 +5,7 @@ const ObjectId = Schema.ObjectId;
 const monitoringSchema = new mongoose.Schema({
     description: { type: String, required: true },
     severity: { type: String, required: true },
-    monitored: { type: ObjectId, required: true, ref: "Monitored" },
+    monitored: { type: ObjectId, required: true, ref: "Person" },
     location: { type: String, required: true },
     type: {
         type: String,
