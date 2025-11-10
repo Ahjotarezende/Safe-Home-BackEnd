@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const routes = require("./routes");
 require("dotenv").config();
+const cron = require("node-cron");
+const axios = require("axios");
 
 const app = express();
 
@@ -41,4 +43,15 @@ app.use(routes);
 
 app.use((err, req, res, next) => {
   res.status(500).send({ error: err });
+});
+
+cron.schedule("*/10 15-21 * * 1-5", async () => {
+  try {
+    await axios.get(
+      "https://safe-home-backend.onrender.com/api/person/"
+    );
+    console.log("Solicitação enviada com sucesso.");
+  } catch (error) {
+    console.error("Erro ao fazer a solicitação HTTP:", error);
+  }
 });
