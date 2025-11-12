@@ -13,6 +13,7 @@ const personSchema = new mongoose.Schema({
     },
     phone: { type: String, required: true },
     email: { type: String, required: true },
+    braceletIdentifier: { type: String },
     monitored: [{ type: ObjectId, ref: "Person" }]
 }, {
     timestamps: true
