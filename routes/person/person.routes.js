@@ -12,18 +12,15 @@ async function savePerson(personID, data) {
 }
 
 async function getPersonByID(personID) {
-    const person = await Person.findById(personID);
+    const person = await Person.findById(personID).populate("monitored").exec();
     return person;
 }
 
 router.post("/", async (req, res) => {
     try {
         const person = req.body;
-        const responsibleID = person?.respovelId;
-
-        if (responsibleID) {
-            delete person.respovelId
-        }
+        const responsibleID = person?.responsavelId;
+        delete person.responsavelId
 
         const newPerson = await Person.create(person);
 
@@ -31,10 +28,11 @@ router.post("/", async (req, res) => {
             res.status(500).json({ error: "Erro ao criar nova pessoa" });
         }
 
-        const responsible = getPersonByID(responsibleID);
-        responsible.monitored.push(newPerson);
-
-        await savePerson(responsibleID, responsible);
+        if (responsibleID) {
+            const responsible = await getPersonByID(responsibleID);
+            responsible.monitored.push(newPerson);
+            await savePerson(responsibleID, responsible);
+        }
 
         res.status(200).json({ message: "Pessoa criada com sucesso", data: newPerson });
     } catch (err) {
@@ -82,13 +80,6 @@ router.get("/getPersonByID/:personid", async (req, res) => {
 router.delete("/:personid", async (req, res, next) => {
     try {
         const personID = req.params?.personid;
-        // const personReferenced = await Sale.exists({ customer: personID });
-        // if (personReferenced) {
-        //   return res.status(400).send({
-        //     message:
-        //       "Este cliente está associado a uma venda e não pode ser excluído.",
-        //   });
-        // }
         const deletedPerson = await Person.findByIdAndDelete(personID);
         if (!deletedPerson) {
             res.status(400).send({
@@ -96,6 +87,16 @@ router.delete("/:personid", async (req, res, next) => {
             });
             return;
         }
+
+        let responsible = await Person.findOne({ monitored: personID });
+        if (responsible) {
+            responsible.monitored = responsible.monitored.filter(prs => prs != personID);
+            await savePerson(
+                responsible._id,
+                responsible
+            );
+        }
+
         res.status(200).json({
             message: "Pessoa deletada com sucesso",
             data: deletedPerson,
