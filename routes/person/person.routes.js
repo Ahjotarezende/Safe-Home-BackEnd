@@ -77,6 +77,17 @@ router.get("/getPersonByID/:personid", async (req, res) => {
     }
 });
 
+router.get("/getMonitored/:personid", async (req, res) => {
+    try {
+        const personID = req.params.personid;
+        const person = await getPersonByID(personID);
+        const monitored = person.monitored;
+        res.status(200).json(monitored);
+    } catch (err) {
+        res.status(500).json({ error: "Erro ao buscar pessoa", message: err });
+    }
+});
+
 router.delete("/:personid", async (req, res, next) => {
     try {
         const personID = req.params?.personid;
