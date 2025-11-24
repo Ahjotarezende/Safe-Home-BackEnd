@@ -117,4 +117,5 @@ router.delete("/:personid", async (req, res, next) => {
     }
 });
 
-module.exports = router;
+exports.personRoutes = router;
+exports.getPersonByID = getPersonByID;
