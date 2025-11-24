@@ -3,16 +3,21 @@ const router = express.Router();
 
 const Monitoring = require("../../models/monitoring/monitoring.model");
 const Person = require("../../models/person/person.model");
+const { getPersonByID } = require("../person/person.routes");
+const { sendEmail } = require("../../src/emailDTO");
 
 router.post("/", async (req, res) => {
     try {
         const monitoring = req.body;
+        const incident = monitoring.type === "fall" ? "Queda" : "Incidente geral";
 
         const newMonitoring = await Monitoring.create(monitoring);
 
         if (!newMonitoring) {
             res.status(500).json({ error: "Erro ao criar novo registro de incidente" });
         }
+        const monitored = await getPersonByID(monitoring.monitored)
+        sendEmail('Ilo Rivero', 'ilo@pucminas.com.br', monitored.name, incident, monitoring.location);
 
         res.status(200).json({ message: "Registro de incidente criado com sucesso", data: newMonitoring });
     } catch (err) {
